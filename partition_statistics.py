@@ -40,7 +40,6 @@ class PartitionStatistics:
                 print("\tSize: " + str(size))
 
 
-
     def _force_encoding(self, text):
         try:
             text.encode('utf-8')
