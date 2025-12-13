@@ -1,10 +1,11 @@
 from partition_statistics import PartitionStatistics
+from chart_generator import ChartGenerator
 from tkinter.font import Font
 
 import tkinter as tk
 
 
-def statistics_window(partition_statistics):
+def statistics_window(partition_statistics, chart_generator):
     window = tk.Tk()
     window.title("Partition Statistics")
     window.geometry("1280x720")
@@ -61,10 +62,10 @@ def statistics_window(partition_statistics):
 
     button_style = {"font": custom_button_font, "height": 2, "bg": "#e1e1e1", "bd": 1, "relief": "raised"}
 
-    file_type_count_chart = tk.Button(bottom_panel, text="Generate Count Chart", command=lambda: print("Count Chart"), **button_style)
+    file_type_count_chart = tk.Button(bottom_panel, text="Generate Count Chart", command=lambda: chart_generator.generate_count_pie_chart(), **button_style)
     file_type_count_chart.pack(side="left",padx=30,pady=15)
 
-    file_type_size_chart = tk.Button(bottom_panel, text="Generate Size Chart", command=lambda: print("Size Chart"), **button_style)
+    file_type_size_chart = tk.Button(bottom_panel, text="Generate Size Chart", command=lambda: chart_generator.generate_size_pie_chart(), **button_style)
     file_type_size_chart.pack(side="left",padx=35,pady=15)
 
     file_type_count_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: print("Top-N Count"), **button_style)
@@ -79,6 +80,8 @@ if __name__ == '__main__':
     user_input = input("Please enter a partition letter: ")
     partition_statistics = PartitionStatistics(user_input)
     partition_statistics.get_partition_statistics()
-    statistics_window(partition_statistics)
+
+    chart_generator = ChartGenerator(partition_statistics.get_ordered_percentage_count(), partition_statistics.get_ordered_percentage_size())
+    statistics_window(partition_statistics, chart_generator)
 
 
