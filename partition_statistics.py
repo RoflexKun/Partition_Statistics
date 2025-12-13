@@ -13,6 +13,8 @@ class PartitionStatistics:
         self.extension_size = {}
         self.extension_count_sorted_list = []
         self.extension_size_sorted_list = []
+        self.ordered_percentage_count = []
+        self.ordered_percentage_size = []
 
     def get_partition_statistics(self):
 
@@ -49,7 +51,7 @@ class PartitionStatistics:
 
         self.sort_extensions_by_count()
         self.sort_extensions_by_size()
-        self.display_percentage()
+        self.compute_percentage()
 
     def sort_extensions_by_count(self):
         for ext in self.extension_dict.keys():
@@ -68,25 +70,75 @@ class PartitionStatistics:
         self.extension_size_sorted_list = sorted(self.extension_size.items(), key=lambda x: x[1], reverse=True)
         print(self.extension_size)
 
-    def display_percentage(self):
-        print("Percentage by number of files:\n")
-        other_percentage = 0.00
+    def order_extension(self, first_order=None, second_order=None) -> list:
+        sorted_items = sorted(
+            first_order.items(),
+            key=lambda item: (item[1], second_order.get(item[0], 0)),
+            reverse=True
+        )
+
+        temp_order_list = []
+        for extension, percentage in sorted_items:
+            temp_order_list.append({extension: percentage})
+
+        return temp_order_list
+
+    def compute_percentage(self):
+        dict_count_percentage = {}
         for extension, count in self.extension_count_sorted_list:
             if self.extension_count[extension]/self.number_files * 100 >= 0.1:
-                print(f"{extension}: {self.extension_count[extension]/self.number_files * 100}%")
+                dict_count_percentage[extension] = self.extension_count[extension]/self.number_files * 100
             else:
-                other_percentage += self.extension_count[extension]/self.number_files * 100
-        print("Other:", str(other_percentage) + '%', '\n')
+                if 'other' not in dict_count_percentage.keys():
+                    dict_count_percentage['other'] = self.extension_count[extension]/self.number_files * 100
+                else:
+                    dict_count_percentage['other'] += self.extension_count[extension]/self.number_files * 100
 
-        other_percentage = 0.00
-        print("Percentage by size:\n")
+        dict_size_percentage = {}
         for extension, count in self.extension_size_sorted_list:
             if self.extension_size[extension]/self.total_byte_size * 100 >= 0.1:
-                print(f"{extension}: {count/self.total_byte_size * 100}%")
+                dict_size_percentage[extension] = self.extension_size[extension]/self.total_byte_size * 100
             else:
-                other_percentage += self.extension_size[extension]/self.total_byte_size * 100
-        print("Other:", str(other_percentage) + '%', '\n')
+                if 'other' not in dict_size_percentage.keys():
+                    dict_size_percentage['other'] = self.extension_size[extension]/self.total_byte_size * 100
+                else:
+                    dict_size_percentage['other'] += self.extension_size[extension]/self.total_byte_size * 100
 
+        self.ordered_percentage_size = self.order_extension(dict_size_percentage, dict_count_percentage)
+        self.ordered_percentage_count = self.order_extension(dict_count_percentage, dict_size_percentage)
+
+        self.display_percentage()
+
+    def display_percentage(self):
+        print("Percentages based on count:")
+        for dict in self.ordered_percentage_count:
+            for extension, percentage in dict.items():
+                print(f"{extension}: {percentage:.2f} %")
+
+        print("Percentages based on size:")
+        for dict in self.ordered_percentage_size:
+            for extension, percentage in dict.items():
+                print(f"{extension}: {percentage:.2f} %")
+
+    def get_ordered_percentage_count(self):
+        return self.ordered_percentage_count
+
+    def get_ordered_percentage_size(self):
+        return self.ordered_percentage_size
+
+    def get_extensions_count(self) -> list:
+        list_extensions = []
+        for dict in self.ordered_percentage_count:
+            for extension, percentage in dict.items():
+                list_extensions.append(extension)
+        return list_extensions
+
+    def get_extensions_size(self) -> list:
+        list_extensions = []
+        for dict in self.ordered_percentage_size:
+            for extension, percentage in dict.items():
+                list_extensions.append(extension)
+        return list_extensions
 
     def _force_encoding(self, text):
         try:
