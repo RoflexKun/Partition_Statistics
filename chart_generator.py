@@ -20,8 +20,8 @@ class ChartGenerator:
 
         return labels, percentages
 
-    def generate_pie_chart(self, exentsion_percentage_list, title, file_name):
-        labels, percentages = self._process_data(exentsion_percentage_list)
+    def generate_pie_chart(self, extension_percentage_list, title, file_name):
+        labels, percentages = self._process_data(extension_percentage_list)
 
         plt.figure(figsize=(12, 12))
 
@@ -44,6 +44,56 @@ class ChartGenerator:
 
         plt.tight_layout()
         plt.show()
+        
+    def generate_bar_chart(self, top_n, extension_percentage_list, title, file_name):
+        labels, percentages = self._process_data(extension_percentage_list)
+
+        limit = min(top_n, len(labels))
+        labels = labels[:limit]
+        percentages = percentages[:limit]
+
+        plt.figure(figsize=(12, 12))
+
+        bars = plt.bar(labels, percentages, color='skyblue', edgecolor='black')
+
+        plt.title(title)
+        plt.xlabel("Extensions", fontsize=12)
+        plt.ylabel("Percentage (%)", fontsize=12)
+
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(
+                bar.get_x() + bar.get_width() / 2,
+                height,
+                f'{height:.2f}%',
+                ha='center',
+                va='bottom',
+                fontsize=9
+            )
+
+        plt.xticks(rotation=45)
+
+        save_path = os.path.join('charts', file_name)
+        plt.savefig(save_path, bbox_inches='tight')
+
+        plt.tight_layout()
+        plt.show()
+
+    def generate_count_bar_chart(self, top_n):
+        self.generate_bar_chart(
+            top_n,
+            self.extension_count_list,
+            "Top-N file types by Count",
+            "bar_chart_count.png"
+        )
+
+    def generate_size_bar_chart(self, top_n):
+        self.generate_bar_chart(
+            top_n,
+            self.extension_size_list,
+            "Top-N file types by Size",
+            "bar_chart_size.png"
+        )
 
     def generate_count_pie_chart(self):
         self.generate_pie_chart(
