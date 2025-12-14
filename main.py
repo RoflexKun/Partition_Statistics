@@ -1,10 +1,12 @@
 from partition_statistics import PartitionStatistics
+from chart_generator import ChartGenerator
 from tkinter.font import Font
+from PIL import Image, ImageTk
 
 import tkinter as tk
+import os
 
-
-def statistics_window(partition_statistics):
+def statistics_window(partition_statistics, chart_generator):
     window = tk.Tk()
     window.title("Partition Statistics")
     window.geometry("1280x720")
@@ -32,8 +34,8 @@ def statistics_window(partition_statistics):
     for extension in partition_statistics.get_extensions_count():
         extension_count_list.insert(tk.END, extension)
 
-    spinbox = tk.Spinbox(count_panel, from_=1, to=len(partition_statistics.get_extensions_count()), textvariable=tk.StringVar(value=str(len(partition_statistics.get_extensions_count()))), width=5, font=custom_list_font)
-    spinbox.pack(anchor="w", pady=(5, 0))
+    spinbox_count = tk.Spinbox(count_panel, from_=1, to=len(partition_statistics.get_extensions_count()), textvariable=tk.StringVar(value=str(len(partition_statistics.get_extensions_count()))), width=5, font=custom_list_font)
+    spinbox_count.pack(anchor="w", pady=(5, 0))
 
     # Graphic settings for the file type size settings
     size_panel = tk.LabelFrame(window, text="File size settings", padx=10, pady=10, background="white", font=custom_label_font)
@@ -52,8 +54,8 @@ def statistics_window(partition_statistics):
     for extension in partition_statistics.get_extensions_size():
         extension_size_list.insert(tk.END, extension)
 
-    spinbox = tk.Spinbox(size_panel, from_=1, to=len(partition_statistics.get_extensions_size()), textvariable=tk.StringVar(value=str(len(partition_statistics.get_extensions_size()))), width=5, font=custom_list_font)
-    spinbox.pack(anchor="w", pady=(5, 0))
+    spinbox_size = tk.Spinbox(size_panel, from_=1, to=len(partition_statistics.get_extensions_size()), textvariable=tk.StringVar(value=str(len(partition_statistics.get_extensions_size()))), width=5, font=custom_list_font)
+    spinbox_size.pack(anchor="w", pady=(5, 0))
 
     #Graphic settings for buttons to display the charts
     bottom_panel = tk.Frame(window, borderwidth=1, relief="raised", background="white")
@@ -61,17 +63,53 @@ def statistics_window(partition_statistics):
 
     button_style = {"font": custom_button_font, "height": 2, "bg": "#e1e1e1", "bd": 1, "relief": "raised"}
 
-    file_type_count_chart = tk.Button(bottom_panel, text="Generate Count Chart", command=lambda: print("Count Chart"), **button_style)
+    file_type_count_chart = tk.Button(bottom_panel, text="Generate Count Chart", command=lambda: show_count_pie_chart(), **button_style)
     file_type_count_chart.pack(side="left",padx=30,pady=15)
 
-    file_type_size_chart = tk.Button(bottom_panel, text="Generate Size Chart", command=lambda: print("Size Chart"), **button_style)
+    file_type_size_chart = tk.Button(bottom_panel, text="Generate Size Chart", command=lambda: show_size_pie_chart(), **button_style)
     file_type_size_chart.pack(side="left",padx=35,pady=15)
 
-    file_type_count_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: print("Top-N Count"), **button_style)
+    file_type_count_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: show_count_bar_chart(), **button_style)
     file_type_count_top_n_chart.pack(side="left",padx=35,pady=15)
 
-    file_type_size_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: print("Top-N Size"), **button_style)
+    file_type_size_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: show_size_bar_chart(), **button_style)
     file_type_size_top_n_chart.pack(side="left",padx=30,pady=15)
+
+    # Graphic settings for the image that will be showcased in the middle of the GUI
+    center_panel = tk.Frame(window, background="#f0f0f0")
+    center_panel.pack(side="top", fill="both", expand=True)
+
+    chart_label = tk.Label(center_panel, text="Select a chart to generate", background="#f0f0f0", font=custom_label_font)
+    chart_label.pack(expand=True)
+
+    def update_chart_display(filename):
+        path = os.path.join("charts", filename)
+        if os.path.exists(path):
+            pil_image = Image.open(path)
+            pil_image = pil_image.resize((650, 550), Image.Resampling.LANCZOS)
+
+            photo = ImageTk.PhotoImage(pil_image)
+
+            chart_label.config(image=photo)
+            chart_label.image = photo
+        else:
+            chart_label.config(text="Error: Chart file not found.", image="")
+
+    def show_count_pie_chart():
+        chart_generator.generate_count_pie_chart()
+        update_chart_display("pie_chart_count.png")
+
+    def show_size_pie_chart():
+        chart_generator.generate_size_pie_chart()
+        update_chart_display("pie_chart_size.png")
+
+    def show_count_bar_chart():
+        chart_generator.generate_count_bar_chart(int(spinbox_count.get()))
+        update_chart_display("bar_chart_count.png")
+
+    def show_size_bar_chart():
+        chart_generator.generate_size_bar_chart(int(spinbox_size.get()))
+        update_chart_display("bar_chart_size.png")
 
     window.mainloop()
 
@@ -79,6 +117,8 @@ if __name__ == '__main__':
     user_input = input("Please enter a partition letter: ")
     partition_statistics = PartitionStatistics(user_input)
     partition_statistics.get_partition_statistics()
-    statistics_window(partition_statistics)
+
+    chart_generator = ChartGenerator(partition_statistics.get_ordered_percentage_count(), partition_statistics.get_ordered_percentage_size())
+    statistics_window(partition_statistics, chart_generator)
 
 
