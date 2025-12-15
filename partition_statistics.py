@@ -4,7 +4,7 @@ import os
 class PartitionStatistics:
 
     def __init__(self, user_input):
-        self.partition_letter = user_input.strip() + ":\\"
+        self.partition_letter = "\\\\?\\" + user_input.strip() + ":\\"
         self.extension_dict = {}
         self.number_directories = 0
         self.number_files = 0
@@ -41,13 +41,13 @@ class PartitionStatistics:
 
         print("Number of directories: " + str(self.number_directories))
         print("Number of files: " + str(self.number_files))
-        """
         for extension, files in self.extension_dict.items():
             print("Extension: " + self._force_encoding(extension))
-            for file_path, size in files.items():
-                print("\tFile: " + self._force_encoding(file_path))
-                print("\tSize: " + str(size))
-        """
+            for file_entry in files:
+                for file_path, size in file_entry.items():
+                    clean_path = file_path[4:]
+                    print("\tFile: " + self._force_encoding(clean_path))
+                    print("\tSize: " + str(size))
 
         self.sort_extensions_by_count()
         self.sort_extensions_by_size()

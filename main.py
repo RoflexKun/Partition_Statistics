@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 
 import tkinter as tk
 import os
+import string
 
 def statistics_window(partition_statistics, chart_generator):
     window = tk.Tk()
@@ -72,7 +73,7 @@ def statistics_window(partition_statistics, chart_generator):
     file_type_count_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: show_count_bar_chart(), **button_style)
     file_type_count_top_n_chart.pack(side="left",padx=35,pady=15)
 
-    file_type_size_top_n_chart = tk.Button(bottom_panel, text="Top-N Count Analysis", command=lambda: show_size_bar_chart(), **button_style)
+    file_type_size_top_n_chart = tk.Button(bottom_panel, text="Top-N Size Analysis", command=lambda: show_size_bar_chart(), **button_style)
     file_type_size_top_n_chart.pack(side="left",padx=30,pady=15)
 
     # Graphic settings for the image that will be showcased in the middle of the GUI
@@ -96,11 +97,24 @@ def statistics_window(partition_statistics, chart_generator):
             chart_label.config(text="Error: Chart file not found.", image="")
 
     def show_count_pie_chart():
-        chart_generator.generate_count_pie_chart()
+        selection_indexes = extension_count_list.curselection()
+        selection = None
+        if selection_indexes:
+            selection = []
+        for i in selection_indexes:
+            selection.append(extension_count_list.get(i))
+
+        chart_generator.generate_count_pie_chart(selection)
         update_chart_display("pie_chart_count.png")
 
     def show_size_pie_chart():
-        chart_generator.generate_size_pie_chart()
+        selection_indexes = extension_size_list.curselection()
+        selection = None
+        if selection_indexes:
+            selection = []
+        for i in selection_indexes:
+            selection.append(extension_size_list.get(i))
+        chart_generator.generate_size_pie_chart(selection)
         update_chart_display("pie_chart_size.png")
 
     def show_count_bar_chart():
@@ -114,7 +128,30 @@ def statistics_window(partition_statistics, chart_generator):
     window.mainloop()
 
 if __name__ == '__main__':
-    user_input = input("Please enter a partition letter: ")
+
+    def check_partition_valid(user_input):
+        if user_input.strip() == "":
+            return False
+        elif len(user_input.strip()) > 1:
+            return False
+        elif user_input.strip() not in string.ascii_letters:
+            return False
+        else:
+            partition_path = user_input.strip() + ":\\"
+            if not os.path.isdir(partition_path):
+                return False
+
+        return True
+
+    while True:
+        user_input = input("Please enter a partition letter: ")
+
+        if check_partition_valid(user_input):
+            break
+        else:
+            print("Invalid Partition Letter.")
+
+
     partition_statistics = PartitionStatistics(user_input)
     partition_statistics.get_partition_statistics()
 

@@ -10,18 +10,31 @@ class ChartGenerator:
         if not os.path.exists('charts'):
             os.makedirs('charts')
 
-    def _process_data(self, extension_percentage_list):
+    def _process_data(self, extension_percentage_list, selection=None):
         labels = []
         percentages = []
-        for dict in extension_percentage_list:
-            for extension, percentage in dict.items():
-                labels.append(extension)
-                percentages.append(percentage)
+        if selection is None:
+            for dict in extension_percentage_list:
+                for extension, percentage in dict.items():
+                    labels.append(extension)
+                    percentages.append(percentage)
+        else:
+            other_percentage = 100.00
+            for extension_selected in selection:
+                for dict in extension_percentage_list:
+                    for extension, percentage in dict.items():
+                        if extension == extension_selected:
+                            labels.append(extension)
+                            percentages.append(percentage)
+                            other_percentage -= percentage
+
+            labels.append('other')
+            percentages.append(other_percentage)
 
         return labels, percentages
 
-    def generate_pie_chart(self, extension_percentage_list, title, file_name):
-        labels, percentages = self._process_data(extension_percentage_list)
+    def generate_pie_chart(self, extension_percentage_list, selection, title, file_name):
+        labels, percentages = self._process_data(extension_percentage_list, selection)
 
         plt.figure(figsize=(12, 12))
 
@@ -43,7 +56,7 @@ class ChartGenerator:
         plt.savefig(save_path, bbox_inches='tight')
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
         
     def generate_bar_chart(self, top_n, extension_percentage_list, title, file_name):
         labels, percentages = self._process_data(extension_percentage_list)
@@ -77,7 +90,7 @@ class ChartGenerator:
         plt.savefig(save_path, bbox_inches='tight')
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def generate_count_bar_chart(self, top_n):
         self.generate_bar_chart(
@@ -95,16 +108,18 @@ class ChartGenerator:
             "bar_chart_size.png"
         )
 
-    def generate_count_pie_chart(self):
+    def generate_count_pie_chart(self, selection):
         self.generate_pie_chart(
             self.extension_count_list,
+            selection,
             "File type distribution by Count",
             "pie_chart_count.png"
         )
 
-    def generate_size_pie_chart(self):
+    def generate_size_pie_chart(self, selection):
         self.generate_pie_chart(
             self.extension_size_list,
+            selection,
             "File type distribution by Size",
             "pie_chart_size.png"
         )
